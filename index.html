@@ -1,0 +1,195 @@
+<html>
+
+<head>
+    <title>Mine Sweeper
+    </title>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        board {
+            display: flex;
+        }
+
+        .row {
+            align-content: center;
+            display: flex;
+        }
+
+        .opened {
+            text-align: center;
+            font-family: serif;
+            font-size: 25px;
+            border: 1px solid white;
+            background-color: #26e085;
+            height: 50px;
+            width: 50px
+        }
+
+        .cell {
+            text-align: center;
+            font-style: oblique;
+            font-size: 25px;
+            display: flex;
+            background-color: gray;
+            border: 1px solid white;
+            height: 50px;
+            width: 50px;
+        }
+
+        .cell:hover {
+            background-color: lightgray;
+        }
+
+        .bomb {
+            height: 100%;
+            width: 100%
+        }
+
+        .flag {
+            height: 100%;
+            width: 100%
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="board" id="board"></div>
+</body>
+<script src="./script.js"></script>
+
+<script>
+
+    (function () {
+        let board = document.getElementById("board")
+        let size = window.prompt("Type Your Game Size")
+        let bombs = window.prompt("Type Your No of bombs")
+        let boardData = createBoard(size, bombs)
+        let safeCellCount = (size * size) - bombs;
+        let openedCellCount = 0;
+        let cellDom = [];
+        let flagged = {};
+        let flagcount = 0
+
+        function gameOver() {
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (boardData[i][j] === "*") {
+                        let img = new Image()
+                        img.src = 'bomb.png'
+                        img.classList.add("bomb")
+                        cellDom[i][j].append(img)
+                        //cellDom[i][j].innerHTML = boardData[i][j] ? boardData[i][j] : ""
+                        cellDom[i][j].classList.replace("cell", "opened")
+                    }
+
+                }
+
+            }
+            setTimeout(function () {
+                if (window.confirm("GAME OVER!!! do you want to continue?")) {
+                    window.location.reload()
+                }
+            }, 500);
+
+        }
+
+
+
+        function openCell(i, j) {
+            let row = cellDom[i]
+            if (!row) {
+                return
+            }
+            let cellrow = row[j]
+            if (!cellrow) {
+                return
+            }
+            if (cellrow.classList.contains("opened")) {
+                return
+            }
+            cellrow.classList.replace("cell", "opened")
+            if (boardData[i][j] !== "*") {
+                openedCellCount++;
+                if (boardData[i][j] !== 0) {
+                    cellrow.innerHTML = boardData[i][j];
+                } else {
+                    for (let k = i - 1; k <= i + 1; k++) {
+                        for (let l = j - 1; l <= j + 1; l++) {
+                            if (k === i && l === j) {
+                                continue;
+                            }
+                            openCell(k, l)
+                        }
+                    }
+                }
+                if (openedCellCount === safeCellCount) {
+                    setTimeout(() => {
+                        if (window.confirm("YOU WON!!")) {
+                            window.location.reload()
+                        }
+                    }, 500);
+
+                }
+            } else {
+                gameOver()
+            }
+        }
+        for (let i = 0; i < size; i++) {
+            let cellRows = []
+            let row = document.createElement("div")
+            row.classList.add("row")
+            for (let j = 0; j < size; j++) {
+                let cell = document.createElement("div")
+                cell.classList.add("cell")
+                row.append(cell)
+                cellRows.push(cell)
+                cell.addEventListener("contextmenu", function (e) {
+                    e.preventDefault()
+                    let flagKey = `${i}-${j}`;
+                    let bombcount = parseInt(bombs)
+                    if (!flagged[flagKey]) {
+                        let flagImg = new Image()
+                        flagImg.src = 'flag.png'
+                        flagImg.classList.add("flag")
+                        cellDom[i][j].append(flagImg)
+                        flagged[flagKey] = true
+                        flagcount++
+                        console.log(flagcount, bombcount)
+                        if (flagcount > bombcount) {
+                            alert("Bomb Limit Reached")
+                            flagged[flagKey] = false
+                        }
+                    } else {
+                        cell.innerHTML = "";
+                        flagged[flagKey] = false
+                          }
+                })
+                cell.addEventListener("click", function (e) {
+                    let flagKey = `${i}-${j}`;
+                    if (!flagged[flagKey]) {
+                        openCell(i, j);
+                    }
+
+                })
+
+
+            }
+            board.append(row)
+            cellDom.push(cellRows)
+        }
+
+    })()
+
+
+
+
+
+</script>
+
+</html>
